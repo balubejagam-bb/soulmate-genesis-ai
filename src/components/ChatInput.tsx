@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SendIcon } from "lucide-react";
+import { SendIcon, Mic, Paperclip } from "lucide-react";
 import { useState } from "react";
 
 interface ChatInputProps {
@@ -22,6 +22,15 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
 
   return (
     <form onSubmit={handleSubmit} className="flex gap-2 p-4 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/60 border-t border-purple-500/20">
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+      >
+        <Paperclip className="h-4 w-4" />
+      </Button>
+      
       <Input
         value={message}
         onChange={(e) => setMessage(e.target.value)}
@@ -29,6 +38,16 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         className="flex-1 bg-slate-800/50 border-purple-500/20 focus-visible:ring-purple-500/50"
         disabled={isLoading}
       />
+      
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+      >
+        <Mic className="h-4 w-4" />
+      </Button>
+      
       <Button 
         type="submit" 
         size="icon" 
