@@ -1,5 +1,4 @@
-
-import { useState, useEffect } from "react";
+import { useState, useEffect, useNavigate } from "react";
 import { v4 as uuidv4 } from "uuid";
 import ChatContainer from "@/components/ChatContainer";
 import ChatInput from "@/components/ChatInput";
@@ -23,8 +22,8 @@ const Index = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sessionTitle, setSessionTitle] = useState("New Chat");
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const navigate = useNavigate();
 
-  // Load chat history from localStorage on component mount
   useEffect(() => {
     const storedChatHistory = localStorage.getItem('chatHistory');
     if (storedChatHistory) {
@@ -37,7 +36,6 @@ const Index = () => {
     }
   }, []);
 
-  // Save chat history to localStorage whenever it changes
   useEffect(() => {
     if (messages.length > 1) { // Only save if we have more than the initial greeting
       localStorage.setItem('chatHistory', JSON.stringify(messages));
@@ -57,7 +55,6 @@ const Index = () => {
       return;
     }
 
-    // Create a new message object
     const newUserMessage: Message = {
       id: uuidv4(),
       text: message,
@@ -65,12 +62,10 @@ const Index = () => {
       timestamp: Date.now()
     };
 
-    // Add user message to chat
     setMessages((prev) => [...prev, newUserMessage]);
     setIsLoading(true);
 
     try {
-      // Create context from previous messages for more personalized responses
       const recentMessages = messages.slice(-5).map(m => ({
         role: m.isAI ? "assistant" : "user",
         content: m.text
@@ -126,9 +121,10 @@ const Index = () => {
     }
   };
 
-  // Temporary login function (to be replaced with Supabase auth)
-  const handleLogin = () => {
-    setIsLoggedIn(true);
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("userEmail");
+    navigate("/login");
   };
 
   return (
@@ -152,7 +148,7 @@ const Index = () => {
       <ChatHeader 
         title={sessionTitle} 
         isLoggedIn={isLoggedIn} 
-        onLogin={handleLogin}
+        onLogin={handleLogout}
       />
       <ChatContainer messages={messages} />
       <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
