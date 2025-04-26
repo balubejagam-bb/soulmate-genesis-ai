@@ -1,4 +1,6 @@
-import { useState, useEffect, useNavigate } from "react";
+
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom"; // Correct import from react-router-dom
 import { v4 as uuidv4 } from "uuid";
 import ChatContainer from "@/components/ChatContainer";
 import ChatInput from "@/components/ChatInput";
@@ -25,6 +27,14 @@ const Index = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Check if user is logged in, if not redirect to login page
+    const isUserLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    if (!isUserLoggedIn) {
+      navigate("/login");
+      return;
+    }
+    setIsLoggedIn(isUserLoggedIn);
+    
     const storedChatHistory = localStorage.getItem('chatHistory');
     if (storedChatHistory) {
       try {
@@ -34,7 +44,7 @@ const Index = () => {
         console.error("Error parsing chat history:", error);
       }
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (messages.length > 1) { // Only save if we have more than the initial greeting
