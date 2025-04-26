@@ -1,13 +1,12 @@
 
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom"; // Correct import from react-router-dom
+import { useNavigate } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 import ChatContainer from "@/components/ChatContainer";
 import ChatInput from "@/components/ChatInput";
 import ChatHeader from "@/components/ChatHeader";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Message } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
   const [messages, setMessages] = useState<Message[]>([
@@ -23,8 +22,9 @@ const Index = () => {
   const [isApiKeyModalOpen, setIsApiKeyModalOpen] = useState(!apiKey);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [sessionTitle, setSessionTitle] = useState("New Chat");
-  const [chatHistory, setChatHistory] = useState<Message[]>([]);
+  const [userId, setUserId] = useState<string>("");
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     // Check if user is logged in, if not redirect to login page
@@ -33,24 +33,58 @@ const Index = () => {
       navigate("/login");
       return;
     }
+    
+    const userEmail = localStorage.getItem("userEmail");
     setIsLoggedIn(isUserLoggedIn);
     
-    const storedChatHistory = localStorage.getItem('chatHistory');
-    if (storedChatHistory) {
-      try {
-        const parsedHistory = JSON.parse(storedChatHistory);
-        setChatHistory(parsedHistory);
-      } catch (error) {
-        console.error("Error parsing chat history:", error);
-      }
+    if (userEmail) {
+      const userIdFromEmail = userEmail.split('@')[0]; // Simple user ID from email
+      setUserId(userIdFromEmail);
+      
+      // Load chat history for this user
+      loadUserChatHistory(userIdFromEmail);
     }
   }, [navigate]);
 
-  useEffect(() => {
-    if (messages.length > 1) { // Only save if we have more than the initial greeting
-      localStorage.setItem('chatHistory', JSON.stringify(messages));
+  const loadUserChatHistory = (userId: string) => {
+    try {
+      const userChatKey = `chatHistory_${userId}`;
+      const storedChat = localStorage.getItem(userChatKey);
+      
+      if (storedChat) {
+        const parsedMessages = JSON.parse(storedChat);
+        
+        if (Array.isArray(parsedMessages) && parsedMessages.length > 0) {
+          setMessages(parsedMessages);
+          console.log(`Loaded ${parsedMessages.length} messages for user ${userId}`);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading chat history:", error);
+      toast({
+        title: "Error",
+        description: "Could not load your previous chat history",
+        variant: "destructive"
+      });
     }
-  }, [messages]);
+  };
+
+  const saveUserChatHistory = (newMessages: Message[]) => {
+    if (userId && newMessages.length > 0) {
+      try {
+        const userChatKey = `chatHistory_${userId}`;
+        localStorage.setItem(userChatKey, JSON.stringify(newMessages));
+      } catch (error) {
+        console.error("Error saving chat history:", error);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (userId && messages.length > 1) { // Only save if we have a user ID and more than the initial greeting
+      saveUserChatHistory(messages);
+    }
+  }, [messages, userId]);
 
   const saveApiKey = () => {
     if (apiKey) {
@@ -72,11 +106,12 @@ const Index = () => {
       timestamp: Date.now()
     };
 
-    setMessages((prev) => [...prev, newUserMessage]);
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages(updatedMessages);
     setIsLoading(true);
 
     try {
-      const recentMessages = messages.slice(-5).map(m => ({
+      const recentMessages = updatedMessages.slice(-5).map(m => ({
         role: m.isAI ? "assistant" : "user",
         content: m.text
       }));
@@ -114,18 +149,21 @@ const Index = () => {
         timestamp: Date.now()
       };
 
-      setMessages((prev) => [...prev, newAIMessage]);
+      const finalMessages = [...updatedMessages, newAIMessage];
+      setMessages(finalMessages);
+      saveUserChatHistory(finalMessages);
     } catch (error) {
       console.error("Error:", error);
-      setMessages((prev) => [
-        ...prev,
-        { 
-          id: uuidv4(),
-          text: "Sorry, I encountered an error. Please try again.", 
-          isAI: true,
-          timestamp: Date.now()
-        },
-      ]);
+      const errorMessage: Message = {
+        id: uuidv4(),
+        text: "Sorry, I encountered an error. Please try again.", 
+        isAI: true,
+        timestamp: Date.now()
+      };
+      
+      const messagesWithError = [...updatedMessages, errorMessage];
+      setMessages(messagesWithError);
+      saveUserChatHistory(messagesWithError);
     } finally {
       setIsLoading(false);
     }

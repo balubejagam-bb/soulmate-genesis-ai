@@ -6,9 +6,17 @@ export interface Message {
   timestamp: number;
 }
 
-// Add WebkitSpeechRecognition interface for TypeScript
+// Add both standard and webkit SpeechRecognition interfaces for TypeScript
 declare global {
   interface Window {
-    webkitSpeechRecognition: any;
+    webkitSpeechRecognition: typeof SpeechRecognition;
+    SpeechRecognition: typeof SpeechRecognition;
   }
+}
+
+// For storing chat history per user
+export interface UserChatHistory {
+  userId: string;
+  messages: Message[];
+  lastUpdated: number;
 }

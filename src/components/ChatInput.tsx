@@ -1,7 +1,8 @@
+
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SendIcon, Mic, Paperclip } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 
@@ -13,10 +14,20 @@ interface ChatInputProps {
 const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [isSpeechSupported, setIsSpeechSupported] = useState(false);
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Check if speech recognition is supported
+    const isSpeechRecognitionSupported = 
+      'webkitSpeechRecognition' in window || 
+      'SpeechRecognition' in window;
+    
+    setIsSpeechSupported(isSpeechRecognitionSupported);
+  }, []);
+
   const startListening = () => {
-    if (!('webkitSpeechRecognition' in window)) {
+    if (!isSpeechSupported) {
       toast({
         title: "Speech Recognition Not Available",
         description: "Your browser doesn't support speech recognition.",
@@ -25,7 +36,8 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
       return;
     }
     
-    const SpeechRecognition = window.webkitSpeechRecognition;
+    // Use standard SpeechRecognition if available, otherwise fall back to webkit prefix
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     
     recognition.lang = 'en-US';
@@ -95,10 +107,11 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         size="icon"
         className={cn(
           "text-purple-400 hover:text-purple-300 hover:bg-purple-500/10",
-          isListening && "bg-purple-500/30"
+          isListening && "bg-purple-500/30",
+          !isSpeechSupported && "opacity-50 cursor-not-allowed"
         )}
         onClick={startListening}
-        disabled={isLoading}
+        disabled={isLoading || !isSpeechSupported}
       >
         <Mic className="h-4 w-4" />
       </Button>
