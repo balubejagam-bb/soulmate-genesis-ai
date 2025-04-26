@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { LogIn, Settings, Menu } from "lucide-react";
+import { LogOut, Menu } from "lucide-react";
 
 interface ChatHeaderProps {
   title: string;
@@ -29,23 +29,15 @@ const ChatHeader = ({ title, isLoggedIn, onLogin }: ChatHeaderProps) => {
       </div>
       
       <div className="flex gap-2">
-        {!isLoggedIn ? (
+        {isLoggedIn && (
           <Button 
             size="sm" 
             variant="outline"
             className="border-purple-500/30 text-purple-400 hover:bg-purple-500/10"
             onClick={onLogin}
           >
-            <LogIn size={16} className="mr-1" />
-            Login
-          </Button>
-        ) : (
-          <Button
-            size="sm"
-            variant="ghost"
-            className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
-          >
-            <Settings size={16} />
+            <LogOut size={16} className="mr-1" />
+            Logout
           </Button>
         )}
       </div>
@@ -57,9 +49,6 @@ const ChatHeader = ({ title, isLoggedIn, onLogin }: ChatHeaderProps) => {
           </div>
           <div className="p-2 hover:bg-purple-500/10 rounded cursor-pointer">
             Chat History
-          </div>
-          <div className="p-2 hover:bg-purple-500/10 rounded cursor-pointer">
-            Settings
           </div>
         </div>
       )}

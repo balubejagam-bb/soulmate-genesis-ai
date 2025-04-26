@@ -1,8 +1,9 @@
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SendIcon, Mic, Paperclip } from "lucide-react";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
@@ -11,6 +12,55 @@ interface ChatInputProps {
 
 const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
   const [message, setMessage] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const { toast } = useToast();
+
+  const startListening = () => {
+    if (!('webkitSpeechRecognition' in window)) {
+      toast({
+        title: "Speech Recognition Not Available",
+        description: "Your browser doesn't support speech recognition.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const SpeechRecognition = window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    
+    recognition.onstart = () => {
+      setIsListening(true);
+      toast({
+        title: "Listening...",
+        description: "Speak now."
+      });
+    };
+    
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      setMessage(prev => prev + transcript);
+    };
+    
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      toast({
+        title: "Error",
+        description: `Speech recognition error: ${event.error}`,
+        variant: "destructive"
+      });
+      setIsListening(false);
+    };
+    
+    recognition.onend = () => {
+      setIsListening(false);
+    };
+    
+    recognition.start();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,7 +93,12 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
         type="button"
         variant="ghost"
         size="icon"
-        className="text-purple-400 hover:text-purple-300 hover:bg-purple-500/10"
+        className={cn(
+          "text-purple-400 hover:text-purple-300 hover:bg-purple-500/10",
+          isListening && "bg-purple-500/30"
+        )}
+        onClick={startListening}
+        disabled={isLoading}
       >
         <Mic className="h-4 w-4" />
       </Button>

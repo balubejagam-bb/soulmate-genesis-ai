@@ -2,6 +2,8 @@
 import { cn } from "@/lib/utils";
 import { Message } from "@/types";
 import { format } from "date-fns";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Bot, User } from "lucide-react";
 
 interface ChatMessageProps {
   message: Message;
@@ -13,10 +15,21 @@ const ChatMessage = ({ message }: ChatMessageProps) => {
   return (
     <div
       className={cn(
-        "flex w-full mb-4",
-        message.isAI ? "justify-start" : "justify-end"
+        "flex w-full mb-4 items-start gap-2",
+        message.isAI ? "justify-start" : "justify-end flex-row-reverse"
       )}
     >
+      <Avatar className={cn(
+        message.isAI ? "bg-purple-600" : "bg-blue-600",
+        "h-8 w-8"
+      )}>
+        {message.isAI ? (
+          <Bot className="h-5 w-5 text-white" />
+        ) : (
+          <User className="h-5 w-5 text-white" />
+        )}
+      </Avatar>
+
       <div
         className={cn(
           "max-w-[80%] rounded-2xl px-4 py-2 relative",
