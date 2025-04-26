@@ -57,11 +57,13 @@ const ChatInput = ({ onSendMessage, isLoading }: ChatInputProps) => {
       setMessage(prev => prev + transcript);
     };
     
-    recognition.onerror = (event) => {
-      console.error("Speech recognition error", event.error);
+    recognition.onerror = (event: Event) => {
+      // Cast the event to any to safely access the error property
+      const errorEvent = event as any;
+      console.error("Speech recognition error", errorEvent.error);
       toast({
         title: "Error",
-        description: `Speech recognition error: ${event.error}`,
+        description: `Speech recognition error: ${errorEvent.error}`,
         variant: "destructive"
       });
       setIsListening(false);
